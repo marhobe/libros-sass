@@ -21,7 +21,7 @@ with tab1:
     if st.session_state.db.empty:
         st.info("Aún no hay libros publicados. ¡Sé el primero en ofrecer uno!")
     else:
-        busqueda = st.text_input("Filtrar por título (ej: To Kill a Mockingbird)").strip().lower()
+        busqueda = st.text_input("Filtrar por título (ej: To kill a mockingbird)").strip().lower()
         
         # Filtrar datos
         df_mostrar = st.session_state.db
