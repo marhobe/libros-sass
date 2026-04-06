@@ -48,7 +48,7 @@ with tab1:
 with tab2:
     st.subheader("Publica tu libro")
     with st.form("form_publicar", clear_on_submit=True):
-        titulo = st.text_input("Título del libro (ej: Ciencias Naturales 3)").strip()
+        titulo = st.text_input("Título del libro (ej: To kill a mockingbird)").strip()
         precio = st.text_input("Precio (Opcional - puedes dejarlo vacío)")
         whatsapp = st.text_input("Tu número de WhatsApp (Ej: 5491122334455)", help="Incluye código de país y área sin el + ni espacios.")
         
