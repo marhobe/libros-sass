@@ -26,8 +26,16 @@ with tab1:
         for i, row in df_mostrar.iterrows():
             with st.expander(f"📖 {row['Título']}"):
                 st.write(f"💰 Precio: {row['Precio'] if row['Precio'] else 'A convenir'}")
-                url_wa = f"https://wa.me/{row['Contacto']}?text=Hola, vi tu libro '{row['Título']}'"
-                st.info(f"💬 [📲 Contactar al vendedor por WhatsApp]({url_wa})")
+                
+                # --- ESTE ES EL CAMBIO MÁGICO ---
+                # Limpiamos el número para que no tenga el ".0"
+                telefono_limpio = str(row['Contacto']).split('.')[0]
+                
+                url_wa = f"https://wa.me/{telefono_limpio}?text=Hola, vi tu libro '{row['Título']}'"                
+                # Ahora el link funcionará perfecto y se verá así:
+                st.info(f"💬 [📲 Contactar al vendedor]({url_wa})")
+                # -------------------------------
+                st.divider()
                 if st.button(f"SÍ, YA SE VENDIÓ", key=f"del_{i}"):
                     df_nuevo = df.drop(i)
                     conn.update(data=df_nuevo)
