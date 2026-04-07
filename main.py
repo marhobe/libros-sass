@@ -49,7 +49,7 @@ with tab1:
                 
                 st.markdown(f"""
                     <a href="{url_wa}" target="_blank" style="
-                        text-decoration: none; background-color: #007bff; color: white;
+                        text-decoration: none; background-color: #4A90E2; color: white;
                         padding: 12px 24px; border-radius: 25px; font-weight: bold;
                         display: flex; align-items: center; justify-content: center;
                         box-shadow: 0 4px 10px rgba(37,211,102,0.3); margin: 10px 0;">
