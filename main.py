@@ -27,7 +27,7 @@ with tab1:
             with st.expander(f"📖 {row['Título']}"):
                 st.write(f"💰 Precio: {row['Precio'] if row['Precio'] else 'A convenir'}")
                 url_wa = f"https://wa.me/{row['Contacto']}?text=Hola, vi tu libro '{row['Título']}'"
-                st.markdown(f"[📲 Contactar al vendedor]({url_wa})")
+                st.markdown(f"### [👉 CLIC AQUÍ PARA CONTACTAR]({url_wa})")
                 if st.button(f"SÍ, YA SE VENDIÓ", key=f"del_{i}"):
                     df_nuevo = df.drop(i)
                     conn.update(data=df_nuevo)
