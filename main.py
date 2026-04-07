@@ -97,7 +97,7 @@ with tab2:
     with st.form("form_pub", clear_on_submit=True):
         nom = st.text_input("Tu Nombre") # Nuevo campo
         t = st.text_input("Título del libro")
-        p = st.text_input("Precio sugerido")
+        p = st.text_input("Precio sugerido (sin puntos ni comas)")
         w = st.text_input("Tu WhatsApp (Ej: 54911...)")
         
         if st.form_submit_button("🚀 PUBLICAR AHORA"):
