@@ -79,4 +79,44 @@ with tab1:
                         align-items: center;
                         justify-content: center;
                         gap: 10px;
-                        box-shadow: 0 4px 10px rgba(3
+                        box-shadow: 0 4px 10px rgba(37,211,102,0.3);
+                        margin: 10px 0;">
+                        📲 CONTACTAR AL VENDEDOR
+                    </a>
+                """
+                st.markdown(boton_html, unsafe_allow_html=True)
+                
+                if st.button(f"🗑️ MARCAR COMO VENDIDO", key=f"btn_{i}"):
+                    st.warning(f"¿Confirmas que quieres borrar '{row['Título']}'?")
+                    b1, b2 = st.columns(2)
+                    with b1:
+                        if st.button("✅ SÍ, BORRAR", key=f"conf_{i}"):
+                            df_nuevo = df.drop(i)
+                            conn.update(data=df_nuevo)
+                            st.success("¡Borrado!")
+                            st.rerun()
+                    with b2:
+                        if st.button("❌ CANCELAR", key=f"canc_{i}"):
+                            st.rerun()
+
+with tab2:
+    st.subheader("Completa los datos del libro")
+    with st.form("form_pub", clear_on_submit=True):
+        t = st.text_input("Título del libro", placeholder="Ej: Lengua y Literatura 2 Santillana")
+        p = st.text_input("Precio sugerido", placeholder="Ej: 5000 o 'Gratis'")
+        w = st.text_input("Tu WhatsApp con código de país", placeholder="Ej: 54911...")
+        
+        if st.form_submit_button("🚀 PUBLICAR AHORA"):
+            if t and w:
+                w_clean = "".join(filter(str.isdigit, w))
+                nueva = pd.DataFrame([{"Título": t, "Precio": p, "Contacto": w_clean}])
+                df_final = pd.concat([df, nueva], ignore_index=True)
+                try:
+                    conn.update(data=df_final)
+                    st.balloons()
+                    st.success("¡Tu libro ya está disponible en la lista!")
+                    st.rerun()
+                except Exception as e:
+                    st.error("Error al guardar.")
+            else:
+                st.error("Por favor completa Título y WhatsApp.")
