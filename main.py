@@ -31,7 +31,7 @@ except:
 tab1, tab2 = st.tabs(["🔍 BUSCAR LIBROS", "📤 PUBLICAR MI LIBRO"])
 
 with tab1:
-    busqueda = st.text_input("¿Qué libro buscas?", placeholder="Ej: Lengua...").strip().lower()
+    busqueda = st.text_input("¿Qué libro buscas?", placeholder="Ej: To kill a mockingbird...").strip().lower()
 
     if df.empty:
         st.info("No hay libros publicados.")
