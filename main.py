@@ -4,7 +4,7 @@ import pandas as pd
 
 st.set_page_config(page_title="EcoLibros | Intercambio Escolar", page_icon="📚", layout="centered")
 
-# --- ESTILO ---
+# --- ESTILO CSS ---
 st.markdown("""
     <style>
     .stButton>button { border-radius: 20px; }
@@ -17,14 +17,14 @@ st.markdown("""
 
 st.title("📚 Intercambio de Libros")
 
-# Función para leer datos frescos (TTL=0 para que no guarde nada en memoria)
+# Función para leer datos siempre frescos
 def cargar_datos():
     conn = st.connection("gsheets", type=GSheetsConnection)
     return conn.read(ttl=0)
 
 try:
     df_raw = cargar_datos()
-    # Solo invertimos si hay datos
+    # Invertimos para ver lo nuevo arriba
     df = df_raw.iloc[::-1].reset_index(drop=True) if not df_raw.empty else df_raw
 except:
     st.error("Error al conectar con la base de datos.")
@@ -59,18 +59,37 @@ with tab1:
                 
                 st.divider()
                 
-                # BORRADO DIRECTO PARA EVITAR ERRORES DE ÍNDICE
-                if st.button(f"🗑️ MARCAR COMO VENDIDO", key=f"btn_{i}"):
-                    # Volvemos a leer el original para estar seguros de qué borramos
-                    df_actual = cargar_datos()
-                    # Buscamos la fila exacta por título y contacto (más seguro que el índice)
-                    df_nuevo = df_actual[~((df_actual['Título'] == row['Título']) & (df_actual['Contacto'] == row['Contacto']))]
-                    
-                    conn = st.connection("gsheets", type=GSheetsConnection)
-                    conn.update(data=df_nuevo)
-                    
-                    st.success("¡Vendido! Actualizando lista...")
-                    st.rerun()
+                # --- LÓGICA DE BORRADO CON CONFIRMACIÓN ---
+                # Usamos una clave única en session_state para cada libro
+                check_key = f"delete_confirm_{i}"
+                
+                if check_key not in st.session_state:
+                    st.session_state[check_key] = False
+
+                if not st.session_state[check_key]:
+                    if st.button(f"🗑️ MARCAR COMO VENDIDO", key=f"btn_{i}"):
+                        st.session_state[check_key] = True
+                        st.rerun()
+                else:
+                    st.warning(f"¿Confirmas que quieres borrar '{row['Título']}'?")
+                    col1, col2 = st.columns(2)
+                    with col1:
+                        if st.button("✅ SÍ, BORRAR", key=f"conf_{i}"):
+                            # Proceso de borrado real
+                            df_actual = cargar_datos()
+                            df_nuevo = df_actual[~((df_actual['Título'] == row['Título']) & (df_actual['Contacto'] == row['Contacto']))]
+                            
+                            conn = st.connection("gsheets", type=GSheetsConnection)
+                            conn.update(data=df_nuevo)
+                            
+                            # Limpiar estado y refrescar
+                            st.session_state[check_key] = False
+                            st.success("¡Vendido!")
+                            st.rerun()
+                    with col2:
+                        if st.button("❌ CANCELAR", key=f"canc_{i}"):
+                            st.session_state[check_key] = False
+                            st.rerun()
 
 with tab2:
     with st.form("form_pub", clear_on_submit=True):
