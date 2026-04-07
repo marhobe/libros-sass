@@ -4,35 +4,13 @@ import pandas as pd
 
 st.set_page_config(page_title="EcoLibros | Intercambio Escolar", page_icon="📚", layout="centered")
 
-# --- ESTILO CSS MODERNO ---
+# --- ESTILO CSS ---
 st.markdown("""
     <style>
-    /* Fondo con degradado sutil y moderno */
-    .stApp {
-        background: linear-gradient(135deg, #fdfbfb 0%, #ebedee 100%);
-    }
-    
-    /* Botones redondeados y con sombra suave */
-    .stButton>button { 
-        border-radius: 20px; 
-        border: none;
-        box-shadow: 0 2px 5px rgba(0,0,0,0.1);
-        transition: all 0.3s ease;
-    }
-    
-    .stButton>button:hover {
-        transform: translateY(-2px);
-        box-shadow: 0 4px 8px rgba(0,0,0,0.15);
-    }
-
-    /* Tarjetas de libros con efecto 'Glassmorphism' ligero */
+    .stButton>button { border-radius: 20px; }
     [data-testid="stExpander"] {
-        border: none !important; 
-        box-shadow: 0 8px 16px rgba(0,0,0,0.05) !important;
-        border-radius: 15px !important; 
-        background-color: rgba(255, 255, 255, 0.8) !important;
-        backdrop-filter: blur(5px);
-        margin-bottom: 15px !important;
+        border: none; box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        border-radius: 15px; background-color: white; margin-bottom: 15px;
     }
     </style>
     """, unsafe_allow_html=True)
@@ -62,12 +40,15 @@ with tab1:
         
         for i, row in df_mostrar.iterrows():
             with st.expander(f"📖 {str(row['Título']).upper()}"):
+                # Mostramos el nombre del vendedor
+                vendedor = row['Nombre'] if 'Nombre' in row and pd.notna(row['Nombre']) else "Usuario"
+                st.write(f"👤 **Vendedor:** {vendedor}")
+                
                 st.metric(label="Precio", value=f"$ {row['Precio'] if row['Precio'] else 'A convenir'}")
                 
                 num_tel = str(row['Contacto']).split('.')[0].strip()
-                url_wa = f"https://wa.me/{num_tel}?text=Hola! Me interesa tu libro '{row['Título']}'"
+                url_wa = f"https://wa.me/{num_tel}?text=Hola {vendedor}! Me interesa tu libro '{row['Título']}'"
                 
-                # --- BOTÓN CON AZUL SUAVE (#4A90E2) ---
                 st.markdown(f"""
                     <a href="{url_wa}" target="_blank" style="
                         text-decoration: none; 
@@ -114,18 +95,19 @@ with tab1:
 
 with tab2:
     with st.form("form_pub", clear_on_submit=True):
+        nom = st.text_input("Tu Nombre") # Nuevo campo
         t = st.text_input("Título del libro")
         p = st.text_input("Precio sugerido")
         w = st.text_input("Tu WhatsApp (Ej: 54911...)")
         
         if st.form_submit_button("🚀 PUBLICAR AHORA"):
-            if t and w:
+            if t and w and nom: # Ahora el nombre también es obligatorio
                 w_clean = "".join(filter(str.isdigit, w))
-                nueva_fila = pd.DataFrame([{"Título": t, "Precio": p, "Contacto": w_clean}])
+                nueva_fila = pd.DataFrame([{"Título": t, "Precio": p, "Contacto": w_clean, "Nombre": nom}])
                 df_para_guardar = pd.concat([cargar_datos(), nueva_fila], ignore_index=True)
                 conn = st.connection("gsheets", type=GSheetsConnection)
                 conn.update(data=df_para_guardar)
                 st.balloons()
                 st.rerun()
             else:
-                st.error("Completa los campos obligatorios.")
+                st.error("Nombre, Título y WhatsApp son obligatorios.")
