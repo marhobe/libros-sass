@@ -23,19 +23,14 @@ with tab1:
         busqueda = st.text_input("Filtrar por título").strip().lower()
         df_mostrar = df[df['Título'].str.lower().str.contains(busqueda, na=False)] if busqueda else df
         
-        for i, row in df_mostrar.iterrows():
+       for i, row in df_mostrar.iterrows():
             with st.expander(f"📖 {str(row['Título'])}"):
                 st.write(f"💰 Precio: {row['Precio'] if row['Precio'] else 'A convenir'}")
                 
-                # 1. Limpiamos el número de cualquier ".0" o espacio
                 num_tel = str(row['Contacto']).split('.')[0].strip()
-                texto_api = f"Hola, vi tu libro '{row['Título']}' en la App."
+                url_wa = f"https://wa.me/{num_tel}?text=Hola, vi tu libro '{row['Título']}'"
                 
-                # 2. Creamos el link final
-                url_wa = f"https://wa.me/{num_tel}?text={texto_api}"
-                
-                # 3. USAMOS HTML (Esto es lo que NO falla nunca)
-                # Creamos un botón visualmente lindo y profesional
+                # Botón HTML verde profesional
                 boton_html = f"""
                     <a href="{url_wa}" target="_blank" style="
                         text-decoration: none;
@@ -52,8 +47,14 @@ with tab1:
                 st.markdown(boton_html, unsafe_allow_html=True)
                 
                 st.divider()
+                
+                # --- AQUÍ ESTABA EL ERROR ---
+                # Todo lo que pase al presionar el botón debe estar "dentro" (más a la derecha)
                 if st.button(f"SÍ, YA SE VENDIÓ", key=f"del_{i}"):
-                    # ... tu código de borrado ...
+                    df_nuevo = df.drop(i)
+                    conn.update(data=df_nuevo)
+                    st.success("Eliminado. Refrescando...")
+                    st.rerun()
 
 with tab2:
     with st.form("form_pub", clear_on_submit=True):
