@@ -40,74 +40,9 @@ with tab1:
         
         for i, row in df_mostrar.iterrows():
             with st.expander(f"📖 {str(row['Título']).upper()}"):
-                # Mostramos el nombre del vendedor
-                vendedor = row['Nombre'] if 'Nombre' in row and pd.notna(row['Nombre']) else "Usuario"
+                # --- LIMPIEZA DE NOMBRE ---
+                vendedor = row['Nombre'] if 'Nombre' in row and pd.notna(row['Nombre']) and str(row['Nombre']).strip() != "" else "Usuario"
                 st.write(f"👤 **Vendedor:** {vendedor}")
                 
-                st.metric(label="Precio", value=f"$ {row['Precio'] if row['Precio'] else 'A convenir'}")
-                
-                num_tel = str(row['Contacto']).split('.')[0].strip()
-                url_wa = f"https://wa.me/{num_tel}?text=Hola {vendedor}! Me interesa tu libro '{row['Título']}'"
-                
-                st.markdown(f"""
-                    <a href="{url_wa}" target="_blank" style="
-                        text-decoration: none; 
-                        background-color: #4A90E2; 
-                        color: white;
-                        padding: 12px 24px; 
-                        border-radius: 25px; 
-                        font-weight: bold;
-                        display: flex; 
-                        align-items: center; 
-                        justify-content: center;
-                        box-shadow: 0 4px 10px rgba(74,144,226,0.3); 
-                        margin: 10px 0;">
-                        📲 CONTACTAR AL VENDEDOR
-                    </a>
-                """, unsafe_allow_html=True)
-                
-                st.divider()
-                
-                check_key = f"delete_confirm_{i}"
-                if check_key not in st.session_state:
-                    st.session_state[check_key] = False
-
-                if not st.session_state[check_key]:
-                    if st.button(f"🗑️ MARCAR COMO VENDIDO", key=f"btn_{i}"):
-                        st.session_state[check_key] = True
-                        st.rerun()
-                else:
-                    st.warning(f"¿Confirmas que quieres borrar '{row['Título']}'?")
-                    col1, col2 = st.columns(2)
-                    with col1:
-                        if st.button("✅ SÍ, BORRAR", key=f"conf_{i}"):
-                            df_actual = cargar_datos()
-                            df_nuevo = df_actual[~((df_actual['Título'] == row['Título']) & (df_actual['Contacto'] == row['Contacto']))]
-                            conn = st.connection("gsheets", type=GSheetsConnection)
-                            conn.update(data=df_nuevo)
-                            st.session_state[check_key] = False
-                            st.success("¡Vendido!")
-                            st.rerun()
-                    with col2:
-                        if st.button("❌ CANCELAR", key=f"canc_{i}"):
-                            st.session_state[check_key] = False
-                            st.rerun()
-
-with tab2:
-    with st.form("form_pub", clear_on_submit=True):
-        nom = st.text_input("Tu Nombre") # Nuevo campo
-        t = st.text_input("Título del libro")
-        p = st.text_input("Precio - Opcional (sin puntos ni comas)")
-        w = st.text_input("Tu WhatsApp (Ej: 54911...)")
-        
-        if st.form_submit_button("🚀 PUBLICAR AHORA"):
-            if t and w and nom: # Ahora el nombre también es obligatorio
-                w_clean = "".join(filter(str.isdigit, w))
-                nueva_fila = pd.DataFrame([{"Título": t, "Precio": p, "Contacto": w_clean, "Nombre": nom}])
-                df_para_guardar = pd.concat([cargar_datos(), nueva_fila], ignore_index=True)
-                conn = st.connection("gsheets", type=GSheetsConnection)
-                conn.update(data=df_para_guardar)
-                st.balloons()
-                st.rerun()
-            else:
-                st.error("Nombre, Título y WhatsApp son obligatorios.")
+                # --- LIMPIEZA DE PRECIO (Evita el $ nan) ---
+                raw_precio = str
