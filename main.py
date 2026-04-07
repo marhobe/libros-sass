@@ -12,7 +12,7 @@ st.write("Base de datos compartida para todos los padres.")
 conn = st.connection("gsheets", type=GSheetsConnection)
 
 # Leer datos actuales (limpia la caché cada 2 minutos para ver cambios de otros)
-df = conn.read(ttl=120)
+df = conn.read()
 
 tab1, tab2 = st.tabs(["🔍 Buscar Libros", "📤 Ofrecer un Libro"])
 
