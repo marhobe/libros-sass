@@ -4,44 +4,19 @@ import pandas as pd
 
 st.set_page_config(page_title="EcoLibros | Intercambio Escolar", page_icon="📚", layout="centered")
 
-# --- DISEÑO CSS MODERNIZADO ---
+# --- ESTILO CSS ---
 st.markdown("""
     <style>
-    /* Fondo con degradado moderno */
-    .stApp {
-        background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
-    }
-    
-    /* Tarjetas de libros con más relieve */
+    .stButton>button { border-radius: 20px; }
     [data-testid="stExpander"] {
-        border: none !important;
-        box-shadow: 0 10px 20px rgba(0,0,0,0.05) !important;
-        border-radius: 20px !important;
-        background-color: rgba(255, 255, 255, 0.9) !important; /* Semi-transparente */
-        margin-bottom: 20px !important;
-        backdrop-filter: blur(10px); /* Efecto vidrio esmerilado */
-    }
-    
-    /* Botones redondeados */
-    .stButton>button {
-        border-radius: 25px !important;
-        font-weight: 600 !important;
-        border: none !important;
-        box-shadow: 0 4px 6px rgba(0,0,0,0.1);
-    }
-    
-    /* Títulos con mejor fuente */
-    h1 {
-        color: #2c3e50;
-        font-weight: 800;
+        border: none; box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        border-radius: 15px; background-color: white; margin-bottom: 15px;
     }
     </style>
     """, unsafe_allow_html=True)
 
 st.title("📚 Intercambio de Libros")
-st.markdown("##### *Comunidad escolar conectada*")
 
-# --- FUNCIONES Y LÓGICA (Igual que antes) ---
 def cargar_datos():
     conn = st.connection("gsheets", type=GSheetsConnection)
     return conn.read(ttl=0)
@@ -64,14 +39,13 @@ with tab1:
         df_mostrar = df[df['Título'].astype(str).str.lower().str.contains(busqueda, na=False)] if busqueda else df
         
         for i, row in df_mostrar.iterrows():
-            # Mostramos cada libro en una tarjeta con estilo
             with st.expander(f"📖 {str(row['Título']).upper()}"):
                 st.metric(label="Precio", value=f"$ {row['Precio'] if row['Precio'] else 'A convenir'}")
                 
                 num_tel = str(row['Contacto']).split('.')[0].strip()
                 url_wa = f"https://wa.me/{num_tel}?text=Hola! Me interesa tu libro '{row['Título']}'"
                 
-                # Botón Azul Suave
+                # --- BOTÓN CON AZUL SUAVE (#4A90E2) ---
                 st.markdown(f"""
                     <a href="{url_wa}" target="_blank" style="
                         text-decoration: none; 
@@ -83,7 +57,7 @@ with tab1:
                         display: flex; 
                         align-items: center; 
                         justify-content: center;
-                        box-shadow: 0 4px 12px rgba(74,144,226,0.4); 
+                        box-shadow: 0 4px 10px rgba(74,144,226,0.3); 
                         margin: 10px 0;">
                         📲 CONTACTAR AL VENDEDOR
                     </a>
@@ -100,24 +74,23 @@ with tab1:
                         st.session_state[check_key] = True
                         st.rerun()
                 else:
-                    st.warning("¿Confirmas la eliminación?")
+                    st.warning(f"¿Confirmas que quieres borrar '{row['Título']}'?")
                     col1, col2 = st.columns(2)
                     with col1:
-                        if st.button("✅ SÍ", key=f"conf_{i}"):
+                        if st.button("✅ SÍ, BORRAR", key=f"conf_{i}"):
                             df_actual = cargar_datos()
                             df_nuevo = df_actual[~((df_actual['Título'] == row['Título']) & (df_actual['Contacto'] == row['Contacto']))]
                             conn = st.connection("gsheets", type=GSheetsConnection)
                             conn.update(data=df_nuevo)
                             st.session_state[check_key] = False
-                            st.success("¡Borrado!")
+                            st.success("¡Vendido!")
                             st.rerun()
                     with col2:
-                        if st.button("❌ NO", key=f"canc_{i}"):
+                        if st.button("❌ CANCELAR", key=f"canc_{i}"):
                             st.session_state[check_key] = False
                             st.rerun()
 
 with tab2:
-    st.subheader("Publica tu libro en segundos")
     with st.form("form_pub", clear_on_submit=True):
         t = st.text_input("Título del libro")
         p = st.text_input("Precio sugerido")
@@ -133,4 +106,4 @@ with tab2:
                 st.balloons()
                 st.rerun()
             else:
-                st.error("Faltan datos obligatorios.")
+                st.error("Completa los campos obligatorios.")
