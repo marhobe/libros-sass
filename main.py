@@ -46,14 +46,20 @@ with tab1:
                     </a>
                 """
                 st.markdown(boton_html, unsafe_allow_html=True)
-                
                 st.divider()
                 
-                if st.button(f"SÍ, YA SE VENDIÓ", key=f"del_{i}"):
-                    df_nuevo = df.drop(i)
-                    conn.update(data=df_nuevo)
-                    st.success("Eliminado.")
-                    st.rerun()
+                if st.button(f"🗑️ MARCAR COMO VENDIDO", key=f"btn_{i}"):
+                    st.warning(f"¿Confirmas que quieres borrar '{row['Título']}'?")
+                    col1, col2 = st.columns(2)
+                    with col1:
+                        if st.button("SÍ, BORRAR", key=f"conf_{i}"):
+                            df_nuevo = df.drop(i)
+                            conn.update(data=df_nuevo)
+                            st.success("Eliminado.")
+                            st.rerun()
+                    with col2:
+                        if st.button("CANCELAR", key=f"canc_{i}"):
+                            st.rerun()
 
 with tab2:
     with st.form("form_pub", clear_on_submit=True):
