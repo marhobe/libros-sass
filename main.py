@@ -40,20 +40,17 @@ with tab1:
         
         for i, row in df_mostrar.iterrows():
             with st.expander(f"📖 {str(row['Título']).upper()}"):
-                # 1. Nombre del vendedor
                 vendedor = row['Nombre'] if 'Nombre' in row and pd.notna(row['Nombre']) and str(row['Nombre']).strip() != "" else "Usuario"
                 st.write(f"👤 **Vendedor:** {vendedor}")
                 
-                # 2. PRECIO UNIFICADO (Sin st.metric para que no salga gigante)
                 raw_precio = str(row['Precio']).strip() if pd.notna(row['Precio']) else ""
                 if raw_precio != "" and raw_precio.lower() != "nan":
                     precio_display = f"$ {raw_precio}"
                 else:
                     precio_display = "A convenir"
                 
-                st.write(f"💰 **Precio:** {precio_display}") # <--- Estilo unificado aquí
+                st.write(f"💰 **Precio:** {precio_display}")
                 
-                # 3. WhatsApp
                 num_tel = str(row['Contacto']).split('.')[0].strip()
                 url_wa = f"https://wa.me/{num_tel}?text=Hola {vendedor}! Me interesa tu libro '{row['Título']}'"
                 
@@ -112,10 +109,19 @@ with tab2:
             if t and w and nom:
                 w_clean = "".join(filter(str.isdigit, w))
                 nueva_fila = pd.DataFrame([{"Título": t, "Precio": p, "Contacto": w_clean, "Nombre": nom}])
+                
+                # Proceso de guardado
                 df_para_guardar = pd.concat([cargar_datos(), nueva_fila], ignore_index=True)
                 conn = st.connection("gsheets", type=GSheetsConnection)
                 conn.update(data=df_para_guardar)
+                
+                # --- MENSAJE DE ÉXITO ---
                 st.balloons()
+                st.success(f"¡Genial {nom}! Tu libro '{t}' se ha publicado con éxito. Ya puedes verlo en la lista.")
+                
+                # Esperamos un segundo para que el usuario lea el mensaje antes de recargar
+                import time
+                time.sleep(2)
                 st.rerun()
             else:
                 st.error("Nombre, Título y WhatsApp son obligatorios.")
