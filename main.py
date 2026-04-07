@@ -4,13 +4,35 @@ import pandas as pd
 
 st.set_page_config(page_title="EcoLibros | Intercambio Escolar", page_icon="📚", layout="centered")
 
-# --- ESTILO CSS ---
+# --- ESTILO CSS MODERNO ---
 st.markdown("""
     <style>
-    .stButton>button { border-radius: 20px; }
+    /* Fondo con degradado sutil y moderno */
+    .stApp {
+        background: linear-gradient(135deg, #fdfbfb 0%, #ebedee 100%);
+    }
+    
+    /* Botones redondeados y con sombra suave */
+    .stButton>button { 
+        border-radius: 20px; 
+        border: none;
+        box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        transition: all 0.3s ease;
+    }
+    
+    .stButton>button:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 8px rgba(0,0,0,0.15);
+    }
+
+    /* Tarjetas de libros con efecto 'Glassmorphism' ligero */
     [data-testid="stExpander"] {
-        border: none; box-shadow: 0 4px 6px rgba(0,0,0,0.1);
-        border-radius: 15px; background-color: white; margin-bottom: 15px;
+        border: none !important; 
+        box-shadow: 0 8px 16px rgba(0,0,0,0.05) !important;
+        border-radius: 15px !important; 
+        background-color: rgba(255, 255, 255, 0.8) !important;
+        backdrop-filter: blur(5px);
+        margin-bottom: 15px !important;
     }
     </style>
     """, unsafe_allow_html=True)
