@@ -87,3 +87,30 @@ with tab1:
                             st.success("¡Borrado!")
                             st.rerun()
                     with b2:
+                        if st.button("❌ CANCELAR", key=f"canc_{i}"):
+                            st.rerun()
+
+with tab2:
+    st.subheader("Completa los datos del libro")
+    with st.form("form_pub", clear_on_submit=True):
+        t = st.text_input("Título del libro")
+        p = st.text_input("Precio sugerido")
+        w = st.text_input("Tu WhatsApp (Ej: 54911...)")
+        
+        if st.form_submit_button("🚀 PUBLICAR AHORA"):
+            if t and w:
+                w_clean = "".join(filter(str.isdigit, w))
+                nueva = pd.DataFrame([{"Título": t, "Precio": p, "Contacto": w_clean}])
+                # Leemos la versión más reciente del Excel para no pisar datos
+                df_actualizado = conn.read(ttl=0)
+                df_final = pd.concat([df_actualizado, nueva], ignore_index=True)
+                try:
+                    conn.update(data=df_final)
+                    st.cache_data.clear()
+                    st.balloons()
+                    st.success("¡Publicado!")
+                    st.rerun()
+                except Exception as e:
+                    st.error("Error al guardar.")
+            else:
+                st.error("Completa Título y WhatsApp.")
