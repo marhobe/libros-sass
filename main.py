@@ -18,9 +18,6 @@ st.markdown("""
 
 st.title("📚 Intercambio de Libros")
 
-# Opciones para los menús desplegables
-OPCIONES_ANOS = ["Todos", "1ro", "2do", "3ro", "4to", "5to", "6to", "Otros"]
-
 def cargar_datos():
     conn = st.connection("gsheets", type=GSheetsConnection)
     return conn.read(ttl=0)
@@ -35,100 +32,17 @@ except:
 tab1, tab2 = st.tabs(["🔍 BUSCAR LIBROS", "📤 PUBLICAR MI LIBRO"])
 
 with tab1:
-    # --- FILTROS COMBINADOS ---
-    col_bus, col_fil = st.columns([2, 1])
-    with col_bus:
-        busqueda = st.text_input("¿Qué libro buscas?", placeholder="Ej: Matemática...").strip().lower()
-    with col_fil:
-        filtro_ano = st.selectbox("Filtrar por Año", OPCIONES_ANOS)
+    busqueda = st.text_input("¿Qué libro buscas?", placeholder="Ej: To kill a mockingbird...").strip().lower()
 
     if df.empty:
         st.info("No hay libros publicados.")
     else:
-        # Lógica de filtrado
-        df_mostrar = df.copy()
-        if busqueda:
-            df_mostrar = df_mostrar[df_mostrar['Título'].astype(str).str.lower().str.contains(busqueda, na=False)]
-        if filtro_ano != "Todos":
-            df_mostrar = df_mostrar[df_mostrar['Año'] == filtro_ano]
-
-        if df_mostrar.empty:
-            st.warning("No se encontraron libros para esta búsqueda.")
-        else:
-            for i, row in df_mostrar.iterrows():
-                # Título dinámico que incluye el año
-                ano_tag = f"({row['Año']})" if 'Año' in row and pd.notna(row['Año']) else ""
-                with st.expander(f"📖 {str(row['Título']).upper()} {ano_tag}"):
-                    
-                    vendedor = row['Nombre'] if 'Nombre' in row and pd.notna(row['Nombre']) and str(row['Nombre']).strip() != "" else "Usuario"
-                    st.write(f"👤 **Vendedor:** {vendedor}")
-                    
-                    raw_precio = str(row['Precio']).strip() if pd.notna(row['Precio']) else ""
-                    precio_display = f"$ {raw_precio}" if raw_precio != "" and raw_precio.lower() != "nan" else "A convenir"
-                    st.write(f"💰 **Precio:** {precio_display}")
-                    
-                    num_tel = str(row['Contacto']).split('.')[0].strip()
-                    url_wa = f"https://wa.me/{num_tel}?text=Hola {vendedor}! Me interesa tu libro '{row['Título']}'"
-                    
-                    st.markdown(f"""
-                        <a href="{url_wa}" target="_blank" style="
-                            text-decoration: none; background-color: #4A90E2; color: white;
-                            padding: 12px 24px; border-radius: 25px; font-weight: bold;
-                            display: flex; align-items: center; justify-content: center;
-                            box-shadow: 0 4px 10px rgba(74,144,226,0.3); margin: 10px 0;">
-                            📲 CONTACTAR AL VENDEDOR
-                        </a>
-                    """, unsafe_allow_html=True)
-                    
-                    st.divider()
-                    
-                    check_key = f"delete_confirm_{i}"
-                    if check_key not in st.session_state:
-                        st.session_state[check_key] = False
-
-                    if not st.session_state[check_key]:
-                        if st.button(f"🗑️ MARCAR COMO VENDIDO", key=f"btn_{i}"):
-                            st.session_state[check_key] = True
-                            st.rerun()
-                    else:
-                        st.warning(f"¿Confirmas que quieres borrar '{row['Título']}'?")
-                        col1, col2 = st.columns(2)
-                        with col1:
-                            if st.button("✅ SÍ, BORRAR", key=f"conf_{i}"):
-                                df_actual = cargar_datos()
-                                df_nuevo = df_actual[~((df_actual['Título'] == row['Título']) & (df_actual['Contacto'] == row['Contacto']))]
-                                conn = st.connection("gsheets", type=GSheetsConnection)
-                                conn.update(data=df_nuevo)
-                                st.session_state[check_key] = False
-                                st.success("¡Vendido!")
-                                st.rerun()
-                        with col2:
-                            if st.button("❌ CANCELAR", key=f"canc_{i}"):
-                                st.session_state[check_key] = False
-                                st.rerun()
-
-with tab2:
-    with st.form("form_pub", clear_on_submit=True):
-        nom = st.text_input("Tu Nombre")
-        t = st.text_input("Título del libro")
-        # El usuario selecciona el año de la lista (quitamos "Todos" de las opciones)
-        a = st.selectbox("Año al que pertenece el libro", OPCIONES_ANOS[1:])
-        p = st.text_input("Precio - Opcional (sin puntos ni comas)")
-        w = st.text_input("Tu WhatsApp (Ej: 54911...)")
+        df_mostrar = df[df['Título'].astype(str).str.lower().str.contains(busqueda, na=False)] if busqueda else df
         
-        if st.form_submit_button("🚀 PUBLICAR AHORA"):
-            if t and w and nom:
-                w_clean = "".join(filter(str.isdigit, w))
-                nueva_fila = pd.DataFrame([{"Título": t, "Precio": p, "Contacto": w_clean, "Nombre": nom, "Año": a}])
+        for i, row in df_mostrar.iterrows():
+            with st.expander(f"📖 {str(row['Título']).upper()}"):
+                # Mostrar el nombre del vendedor
+                vendedor = row['Nombre'] if 'Nombre' in row and pd.notna(row['Nombre']) and str(row['Nombre']).strip() != "" else "Usuario"
+                st.write(f"👤 **Vendedor:** {vendedor}")
                 
-                df_para_guardar = pd.concat([cargar_datos(), nueva_fila], ignore_index=True)
-                conn = st.connection("gsheets", type=GSheetsConnection)
-                conn.update(data=df_para_guardar)
-                
-                st.balloons()
-                st.success(f"¡Genial {nom}! Tu libro '{t}' ({a}) se ha publicado con éxito.")
-                
-                time.sleep(2)
-                st.rerun()
-            else:
-                st.error("Nombre, Título y WhatsApp son obligatorios.")
+                # Lógica para el precio (evita el nan)
