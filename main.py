@@ -9,7 +9,7 @@ st.title("📚 Intercambio de Libros")
 # Intentar conexión
 try:
     conn = st.connection("gsheets", type=GSheetsConnection)
-    df = conn.read()
+    df = conn.read(5)
 except Exception as e:
     st.error("Error de conexión con la base de datos. Verifica los Secrets.")
     st.stop()
