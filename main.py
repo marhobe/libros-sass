@@ -3,34 +3,35 @@ from streamlit_gsheets import GSheetsConnection
 import pandas as pd
 
 st.set_page_config(page_title="EcoLibros", page_icon="📚")
-
 st.title("📚 Intercambio de Libros")
 
-# Intentar conexión
 try:
     conn = st.connection("gsheets", type=GSheetsConnection)
     df = conn.read(ttl=5)
 except Exception as e:
-    st.error("Error de conexión con la base de datos. Verifica los Secrets.")
+    st.error("Error de conexión.")
     st.stop()
 
 tab1, tab2 = st.tabs(["🔍 Buscar Libros", "📤 Ofrecer un Libro"])
 
 with tab1:
+    if st.button("🔄 Actualizar lista"):
+        st.cache_data.clear()
+        st.rerun()
+
     if df.empty:
         st.info("No hay libros publicados aún.")
     else:
         busqueda = st.text_input("Filtrar por título").strip().lower()
-        df_mostrar = df[df['Título'].str.lower().str.contains(busqueda, na=False)] if busqueda else df
+        df_mostrar = df[df['Título'].astype(str).str.lower().str.contains(busqueda, na=False)] if busqueda else df
         
-       for i, row in df_mostrar.iterrows():
+        for i, row in df_mostrar.iterrows():
             with st.expander(f"📖 {str(row['Título'])}"):
                 st.write(f"💰 Precio: {row['Precio'] if row['Precio'] else 'A convenir'}")
                 
                 num_tel = str(row['Contacto']).split('.')[0].strip()
                 url_wa = f"https://wa.me/{num_tel}?text=Hola, vi tu libro '{row['Título']}'"
                 
-                # Botón HTML verde profesional
                 boton_html = f"""
                     <a href="{url_wa}" target="_blank" style="
                         text-decoration: none;
@@ -48,12 +49,10 @@ with tab1:
                 
                 st.divider()
                 
-                # --- AQUÍ ESTABA EL ERROR ---
-                # Todo lo que pase al presionar el botón debe estar "dentro" (más a la derecha)
                 if st.button(f"SÍ, YA SE VENDIÓ", key=f"del_{i}"):
                     df_nuevo = df.drop(i)
                     conn.update(data=df_nuevo)
-                    st.success("Eliminado. Refrescando...")
+                    st.success("Eliminado.")
                     st.rerun()
 
 with tab2:
@@ -63,8 +62,14 @@ with tab2:
         w = st.text_input("WhatsApp (Ej: 54911...)")
         if st.form_submit_button("Publicar"):
             if t and w:
-                nueva = pd.DataFrame([{"Título": t, "Precio": p, "Contacto": w}])
-                df_f = pd.concat([df, nueva], ignore_index=True)
-                conn.update(data=df_f)
-                st.success("¡Publicado!")
-                st.rerun()
+                w_clean = "".join(filter(str.isdigit, w))
+                nueva = pd.DataFrame([{"Título": t, "Precio": p, "Contacto": w_clean}])
+                df_final = pd.concat([df, nueva], ignore_index=True)
+                try:
+                    conn.update(data=df_final)
+                    st.success("¡Publicado!")
+                    st.rerun()
+                except Exception as e:
+                    st.error("Error al guardar.")
+            else:
+                st.error("Título y WhatsApp son obligatorios.")
