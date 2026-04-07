@@ -40,20 +40,20 @@ with tab1:
         
         for i, row in df_mostrar.iterrows():
             with st.expander(f"📖 {str(row['Título']).upper()}"):
-                # --- LIMPIEZA DE NOMBRE ---
+                # 1. Nombre del vendedor
                 vendedor = row['Nombre'] if 'Nombre' in row and pd.notna(row['Nombre']) and str(row['Nombre']).strip() != "" else "Usuario"
                 st.write(f"👤 **Vendedor:** {vendedor}")
                 
-                # --- LIMPIEZA DE PRECIO (Evita el $ nan) ---
+                # 2. PRECIO UNIFICADO (Sin st.metric para que no salga gigante)
                 raw_precio = str(row['Precio']).strip() if pd.notna(row['Precio']) else ""
                 if raw_precio != "" and raw_precio.lower() != "nan":
                     precio_display = f"$ {raw_precio}"
                 else:
                     precio_display = "A convenir"
                 
-                st.metric(label="Precio", value=precio_display)
+                st.write(f"💰 **Precio:** {precio_display}") # <--- Estilo unificado aquí
                 
-                # --- WHATSAPP ---
+                # 3. WhatsApp
                 num_tel = str(row['Contacto']).split('.')[0].strip()
                 url_wa = f"https://wa.me/{num_tel}?text=Hola {vendedor}! Me interesa tu libro '{row['Título']}'"
                 
